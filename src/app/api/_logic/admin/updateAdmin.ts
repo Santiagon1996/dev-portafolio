@@ -1,8 +1,10 @@
 import { Admin, IAdmin } from "@lib/db/models/index";  // Aquí usas un tipo (IAdmin), eso es TS
 import { errors, validators } from "@shared";
+import { handleLogicError } from "@lib/helpers/handleLogicError";
+
 
 const { validateId } = validators;
-const { NotFoundError, SystemError, ValidationError, DuplicityError } = errors;
+const { NotFoundError, DuplicityError } = errors;
 
 /**
  * updateAdmin - Función para actualizar un administrador en la base de datos.
@@ -75,10 +77,10 @@ export const updateAdmin = async (adminData: AdminInput): Promise<IAdmin> => {
             }
         }
 
-        // 5. Actualizar el admin por id
-        const updatedAdmin = await Admin.findById(validatedId).select('+password');
+        // 5. Buscar el admin por id y actualizar con save para disparar el hash de password
+        const adminDoc = await Admin.findById(validatedId).select('+password');
 
-        if (!updatedAdmin) {
+        if (!adminDoc) {
             throw new NotFoundError(
                 "No se encontró un administrador con ese ID", // frontend
                 { id: validatedId },
@@ -86,46 +88,11 @@ export const updateAdmin = async (adminData: AdminInput): Promise<IAdmin> => {
             );
         }
 
-
-        Object.assign(updatedAdmin, updateData); // Actualiza username, email, password
-        await updatedAdmin.save(); // Aquí sí se dispara el hash del password
-
-
-        return updatedAdmin;
+        Object.assign(adminDoc, updateData); // Actualiza username, email, password
+        await adminDoc.save(); // Dispara el hash si el password cambió
+        return adminDoc;
         // ** TS: Definir el tipo del parámetro error como unknown para un control más seguro **
     } catch (error: unknown) {
-
-        // ** TS: Comprobación de tipo seguro usando instanceof para errores específicos **
-        // ** TS: Si el error es una instancia de ValidationError, NotFoundError o DuplicityError, se maneja específicamente **
-        if (error instanceof ValidationError) {
-            // Log detallado para el dev 
-            console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
-            // Lo relanzas para que lo maneje el frontend o API
-            throw error;
-        }
-        if (error instanceof NotFoundError) {
-            console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
-            throw error; // Lo relanzas para que el handler externo lo maneje
-        }
-        if (error instanceof DuplicityError) {
-            console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
-            throw error;
-        }
-
-        // ** TS: si el error es una instancia de Error, se maneja como tal **
-        if (error instanceof Error) {
-            // Errores no esperados se envuelven en SystemError
-            console.error(`[SystemError] ${error.message}`);
-            throw new SystemError(
-                "Ocurrió un error inesperado. Por favor, intenta nuevamente más tarde.",
-                { message: error.message }
-            );
-        }
-        // ** TS: para cualquier otro tipo de error se convierte a string **
-        console.error(`[UnknownError] ${String(error)}`);
-        throw new SystemError(
-            "Error desconocido. Contacte a soporte.",
-            { message: String(error) }
-        );
+        handleLogicError(error)
     }
 };

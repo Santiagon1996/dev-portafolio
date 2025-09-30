@@ -44,7 +44,7 @@ export const deleteSkill = async (skillData: SkillInput): Promise<ISkill> => {
 
     try {
 
-        const validatedId = validateId(skillData);
+        const validatedId = validateId(skillData.id);
 
 
 
@@ -58,8 +58,7 @@ export const deleteSkill = async (skillData: SkillInput): Promise<ISkill> => {
             );
         }
 
-
-        console.log(`Habilidad eliminada exitosamente: ${deletedSkill._id} - "${deletedSkill.title}"`);
+        console.log(`Habilidad eliminada exitosamente: ${deletedSkill._id} - "${deletedSkill.name}"`);
 
         return deletedSkill;
     } catch (error: unknown) {
@@ -72,6 +71,11 @@ export const deleteSkill = async (skillData: SkillInput): Promise<ISkill> => {
             throw error;
         }
         if (error instanceof DuplicityError) {
+            console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
+            throw error; // Lo relanzas para que el handler externo lo maneje
+        }
+
+        if (error instanceof NotFoundError) {
             console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
             throw error; // Lo relanzas para que el handler externo lo maneje
         }

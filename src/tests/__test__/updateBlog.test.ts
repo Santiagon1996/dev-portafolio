@@ -90,7 +90,7 @@ type UpdateBlogReturnType = {
     author?: string;
 };
 
-const mockValidateUpdateBlog = validateUpdateBlog as jest.MockedFunction<(input: any) => UpdateBlogReturnType>;
+const mockValidateUpdateBlog = validateUpdateBlog as jest.MockedFunction<(input: unknown) => UpdateBlogReturnType>;
 const mockSlugify = slugify as jest.MockedFunction<typeof slugify>;
 
 describe('🧪 updateBlog - Test Suite Completo', () => {

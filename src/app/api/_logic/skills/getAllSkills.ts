@@ -100,13 +100,7 @@ export const getAllSkills = async (
         ]);
         // ⚡ RESULTADO: skills es ISkill[], total es number - TypeScript lo sabe automáticamente
 
-        if (!skills || skills.length === 0) {
-            throw new NotFoundError("No se encontraron resultados",
-                { filter },
-                'Not Found Error '
-            );
 
-        }
         // 📚 CONCEPTO TS: Operaciones matemáticas con Math y tipos number
         const totalPages: number = Math.ceil(total / limit);
         // TypeScript garantiza que total y limit son numbers, por lo que totalPages también

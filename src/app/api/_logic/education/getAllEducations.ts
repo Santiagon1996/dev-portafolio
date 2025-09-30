@@ -25,7 +25,7 @@ const { SystemError, NotFoundError } = errors;
 interface GetAllEducationsOptions {
     page?: number;        // OPCIONAL: ¿Qué página? (si no se pasa, default = 1)
     limit?: number;       // OPCIONAL: ¿Cuántos por página? (si no se pasa, default = 10)
-    institution?: string[];      // OPCIONAL: ¿Filtrar por institución? (undefined = no filtrar)
+    institution?: string;      // OPCIONAL: ¿Filtrar por institución? (undefined = no filtrar)
     degree?: string;      // OPCIONAL: ¿Filtrar por grado? (undefined = no filtrar)
 }
 // ⚡ BENEFICIO: Puedes llamar la función como:
@@ -100,13 +100,7 @@ export const getAllEducations = async (
         ]);
         // ⚡ RESULTADO: blogs es IEducation[], total es number - TypeScript lo sabe automáticamente
 
-        if (!education || education.length === 0) {
-            throw new NotFoundError("No se encontraron resultados",
-                { filter },
-                'Not Found Error '
-            );
-
-        }
+        // Si no hay Education, se retorna un arreglo vacio y total = 0 
         // 📚 CONCEPTO TS: Operaciones matemáticas con Math y tipos number
         const totalPages: number = Math.ceil(total / limit);
         // TypeScript garantiza que total y limit son numbers, por lo que totalPages también

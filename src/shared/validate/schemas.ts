@@ -53,10 +53,15 @@ export const contactFormSchema = z.object({
 export const projectSchema = z.object({
     title: z.string().min(3).max(100),
     description: z.string().min(10).max(500),
-    image: z.string().url('Debe ser una URL válida'),
-    link: z.string().regex(constant.URL_REGEX, 'Debe ser una URL válida'),
-    technologies: z.array(z.string().min(1)).min(1),
-    repository: z.string().url('Debe ser una URL válida').optional(),
+    techStack: z.array(z.string().min(1)).min(1),
+    repoUrl: z.string().regex(constant.URL_REGEX, 'Debe ser una URL válida').optional(),
+    demoUrl: z.string().regex(constant.URL_REGEX, 'Debe ser una URL válida').optional(),
+    images: z.array(z.string().url('Debe ser una URL válida')).optional(),
+    tags: z.array(z.string().min(1)).optional(),
+    featured: z.boolean().default(false),
+    createdAt: z.preprocess((arg) => {
+        if (typeof arg == 'string' || arg instanceof Date) return new Date(arg);
+    }, z.date()).optional(),
 });
 export const updateProjectSchema = projectSchema.partial();
 

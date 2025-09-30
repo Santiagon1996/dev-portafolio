@@ -16,6 +16,12 @@ jest.mock("@shared", () => ({
                 this.name = "ValidationError";
             }
         },
+        DuplicityError: class DuplicityError extends Error {
+            constructor(message?: string) {
+                super(message);
+                this.name = "DuplicityError";
+            }
+        },
         NotFoundError: class NotFoundError extends Error {
             constructor(message?: string) {
                 super(message);

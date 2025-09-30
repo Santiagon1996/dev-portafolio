@@ -44,7 +44,7 @@ export const deleteProject = async (projectData: ProjectInput): Promise<IProject
 
     try {
 
-        const validatedId = validateId(projectData);
+        const validatedId = validateId(projectData.id);
 
 
 
@@ -72,6 +72,10 @@ export const deleteProject = async (projectData: ProjectInput): Promise<IProject
             throw error;
         }
         if (error instanceof DuplicityError) {
+            console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
+            throw error; // Lo relanzas para que el handler externo lo maneje
+        }
+        if (error instanceof NotFoundError) {
             console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
             throw error; // Lo relanzas para que el handler externo lo maneje
         }

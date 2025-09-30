@@ -40,11 +40,11 @@ interface EducationInput {
     id: string;
 }
 
-export const addEducation = async (educationData: EducationInput): Promise<IEducation> => {
+export const deleteEducation = async (educationData: EducationInput): Promise<IEducation> => {
 
     try {
 
-        const validatedId = validateId(educationData);
+        const validatedId = validateId(educationData.id);
 
 
 
@@ -72,6 +72,11 @@ export const addEducation = async (educationData: EducationInput): Promise<IEduc
             throw error;
         }
         if (error instanceof DuplicityError) {
+            console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
+            throw error; // Lo relanzas para que el handler externo lo maneje
+        }
+
+        if (error instanceof NotFoundError) {
             console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
             throw error; // Lo relanzas para que el handler externo lo maneje
         }

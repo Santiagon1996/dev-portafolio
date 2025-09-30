@@ -103,13 +103,11 @@ export const getAllBlogs = async (
             BlogPost.countDocuments(filter)
         ]);
 
-        if (!blogs || blogs.length === 0) {
-            throw new NotFoundError("No se encontraron resultados",
-                { filter },
-                'Not Found Error '
-            );
-
-        }
+        // Si no hay blogs, se retorna un arreglo vacío y total = 0
+        // Esto permite al frontend manejar la ausencia de datos sin tratarlo como error
+        // Comportamiento estándar en APIs REST: nunca lanzar error por listado vacío
+        // Solo lanzar NotFoundError en búsquedas por ID o recursos únicos
+        // Documentación: Si no hay blogs, retorna { blogs: [], total: 0, ... }
         // ⚡ RESULTADO: blogs es IBlogPost[], total es number - TypeScript lo sabe automáticamente
 
         // 📚 CONCEPTO TS: Operaciones matemáticas con Math y tipos number

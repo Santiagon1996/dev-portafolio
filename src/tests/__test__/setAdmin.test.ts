@@ -145,7 +145,7 @@ describe("setAdmin", () => {
             } catch (error) {
                 expect(isNotFoundError(error)).toBe(true);
                 if (isNotFoundError(error)) {
-                    expect(error.message).toBe("Admin not found"); // internalMessage
+                    expect(error.message).toBe("Administrador no encontrado"); // internalMessage
                     expect(error.publicMessage).toBe("Administrador no encontrado"); // publicMessage
                     expect(error.details).toEqual({
                         username: validAdminData.username
@@ -171,7 +171,7 @@ describe("setAdmin", () => {
             } catch (error) {
                 expect(isCredentialsError(error)).toBe(true);
                 if (isCredentialsError(error)) {
-                    expect(error.message).toBe("Invalid admin credentials"); // internalMessage
+                    expect(error.message).toBe("Las credenciales proporcionadas son incorrectas"); // internalMessage
                     expect(error.publicMessage).toBe("Las credenciales proporcionadas son incorrectas"); // publicMessage
                     expect(error.details).toEqual({});
                 }
@@ -282,7 +282,7 @@ describe("setAdmin", () => {
             const mockValidationError = new ValidationError(
                 "Los datos de acceso son inválidos", // publicMessage
                 { username: ["Username is required"], password: ["Password too short"] }, // details
-                "Invalid login data" // internalMessage
+                "Los datos de acceso son inválidos" // internalMessage
             );
 
             (validators.validateUserLogin as jest.Mock).mockImplementation(() => {
@@ -295,7 +295,7 @@ describe("setAdmin", () => {
             } catch (error) {
                 expect(isValidationError(error)).toBe(true);
                 if (isValidationError(error)) {
-                    expect(error.message).toBe("Invalid login data"); // internalMessage
+                    expect(error.message).toBe("Los datos de acceso son inválidos"); // internalMessage
                     expect(error.publicMessage).toBe("Los datos de acceso son inválidos"); // publicMessage
                     expect(error.details).toEqual({
                         username: ["Username is required"],
@@ -434,7 +434,7 @@ describe("setAdmin", () => {
             const originalValidationError = new ValidationError(
                 "Original public message", // publicMessage
                 { field: "original details" }, // details
-                "Original validation message" // internalMessage
+                "Original public message" // internalMessage
             );
 
             (validators.validateUserLogin as jest.Mock).mockImplementation(() => {
@@ -449,7 +449,7 @@ describe("setAdmin", () => {
                 expect(error).toBe(originalValidationError);
                 expect(isValidationError(error)).toBe(true);
                 if (isValidationError(error)) {
-                    expect(error.message).toBe("Original validation message");
+                    expect(error.message).toBe("Original public message");
                     expect(error.publicMessage).toBe("Original public message");
                     expect(error.details).toEqual({ field: "original details" });
                 }

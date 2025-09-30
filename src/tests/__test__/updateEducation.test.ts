@@ -1,191 +1,133 @@
-// import { updateEducation } from '@app/api/_logic/education/updateEducation';
-// import { Education, IEducation } from '@lib/db/models/index';
-// import { validators } from '@shared/validate/index';
-// import { ValidationError, NotFoundError, DuplicityError, SystemError } from '@shared/errors/errors';
-// const { validateId, validateUpdateEducation } = validators
-// jest.mock('@lib/db/models/index');
-// jest.mock('@shared/validate/index');
+/**
+ * 🧪 UPDATE EDUCATION - TEST SUITE COMPLETO
+ * Basado en la lógica, modelo y schema Zod de education
+ */
 
-// const mockEducation = Education as jest.Mocked<typeof Education>;
-// const mockValidateId = validateId as jest.MockedFunction<typeof validateId>;
-// const mockValidateUpdateEducation = validateUpdateEducation as jest.MockedFunction<typeof validateUpdateEducation>;
+import { updateEducation } from '@app/api/_logic/education/updateEducation';
+import { Education, IEducation } from '@lib/db/models/index';
+import { validators } from '@shared/validate/index';
+import { ValidationError, DuplicityError, NotFoundError, SystemError } from '@shared/errors/errors';
 
-// interface EducationUpdateInputTest {
-//     id: string;
-//     degree?: string;
-//     institution?: string;
-//     field?: string;
-//     startDate?: Date | string;
-//     endDate?: Date | string;
-//     description?: string;
-// }
+jest.mock('@lib/db/models/index');
+jest.mock('@shared/validate/index');
 
-// const validEducationId = '507f1f77bcf86cd799439011';
-// const validUpdateInput: EducationUpdateInputTest = {
-//     id: validEducationId,
-//     degree: 'Licenciatura en Matemática',
-//     institution: 'Universidad Nacional',
-//     field: 'Matemática',
-//     startDate: '2021-01-01',
-//     endDate: '2025-12-01',
-//     description: 'Actualización de carrera.'
-// };
+const mockEducation = Education as jest.Mocked<typeof Education>;
+const mockValidateUpdateEducation = validators.validateUpdateEducation as jest.MockedFunction<typeof validators.validateUpdateEducation>;
+const mockValidateId = validators.validateId as jest.MockedFunction<typeof validators.validateId>;
 
-// const updatedEducationMock: IEducation = {
-//     _id: validEducationId,
-//     degree: 'Licenciatura en Matemática',
-//     institution: 'Universidad Nacional',
-//     field: 'Matemática',
-//     startDate: '2021-01-01',
-//     endDate: '2025-12-01',
-//     description: 'Actualización de carrera.'
-// } as unknown as IEducation;
+interface EducationUpdateInputTest {
+    id: string;
+    institution?: string;
+    degree?: string;
+    field?: string;
+    startDate?: Date;
+    endDate?: Date;
+    description?: string;
+}
 
-// const validatedUpdateMock = {
-//     degree: 'Licenciatura en Matemática',
-//     institution: 'Universidad Nacional',
-//     field: 'Matemática',
-//     startDate: '2021-01-01',
-//     endDate: '2025-12-01',
-//     description: 'Actualización de carrera.'
-// };
+describe('🧪 updateEducation - Test Suite Completo', () => {
+    const validEducationId = '507f1f77bcf86cd799439011';
+    const validInput: EducationUpdateInputTest = {
+        id: validEducationId,
+        institution: 'Universidad Test',
+        degree: 'Ingeniería',
+        field: 'Sistemas',
+        startDate: new Date('2020-01-01'),
+        endDate: new Date('2024-01-01'),
+        description: 'Actualización de educación de prueba'
+    };
 
-// describe('🧪 updateEducation - Test Suite Completo', () => {
-//     beforeEach(() => {
-//         jest.clearAllMocks();
-//         jest.spyOn(console, 'error').mockImplementation(() => { });
-//     });
-//     afterEach(() => {
-//         jest.restoreAllMocks();
-//     });
+    const validatedUpdateMock = {
+        institution: 'Universidad Test',
+        degree: 'Ingeniería',
+        field: 'Sistemas',
+        startDate: '2022-01-01',
+        endDate: '2023-01-01',
+        description: 'Actualización de educación de prueba'
+    };
 
-//     // 🎯 HAPPY PATH TESTS
-//     describe('✅ Happy Path - Casos Exitosos', () => {
-//         test('✅ Debe actualizar una educación exitosamente', async () => {
-//             // Arrange
-//             mockValidateId.mockReturnValue(validEducationId);
-//             mockValidateUpdateEducation.mockReturnValue({
-//                 degree: 'Licenciatura en Matemática',
-//                 institution: 'Universidad Nacional',
-//                 field: 'Matemática',
-//                 startDate: '2021-01-01',
-//                 endDate: '2025-12-01',
-//                 description: 'Actualización de carrera.'
-//             });
-//             mockEducation.findOne.mockResolvedValue(null); // No hay duplicidad
-//             mockEducation.findByIdAndUpdate.mockResolvedValue(updatedEducationMock);
+    const updatedEducationMock: IEducation = {
+        _id: validEducationId,
 
-//             // Act
-//             const result = await updateEducation(validUpdateInput);
+        ...validatedUpdateMock
+    } as unknown as IEducation;
 
-//             // Assert
-//             expect(mockValidateId).toHaveBeenCalledWith(validEducationId);
-//             expect(mockValidateUpdateEducation).toHaveBeenCalledWith({
-//                 degree: 'Licenciatura en Matemática',
-//                 institution: 'Universidad Nacional',
-//                 field: 'Matemática',
-//                 startDate: '2021-01-01',
-//                 endDate: '2025-12-01',
-//                 description: 'Actualización de carrera.'
-//             });
-//             expect(mockEducation.findOne).toHaveBeenCalledWith({
-//                 $and: [
-//                     { _id: { $ne: validEducationId } },
-//                     {
-//                         $or: [
-//                             { degree: 'Licenciatura en Matemática' },
-//                             { slug: expect.any(String) }
-//                         ]
-//                     }
-//                 ]
-//             });
-//             expect(mockEducation.findByIdAndUpdate).toHaveBeenCalledWith(
-//                 validEducationId,
-//                 {
-//                     degree: 'Licenciatura en Matemática',
-//                     institution: 'Universidad Nacional',
-//                     field: 'Matemática',
-//                     startDate: '2021-01-01',
-//                     endDate: '2025-12-01',
-//                     description: 'Actualización de carrera.'
-//                 },
-//                 { new: true, runValidators: true }
-//             );
-//             expect(result).toEqual(updatedEducationMock);
-//         });
-//     });
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
-//     // 💥 VALIDATION ERROR TESTS
-//     describe('❌ Validation Errors - Errores por Campo', () => {
-//         test('❌ Debe fallar cuando degree es muy corto', async () => {
-//             const invalidInput = { ...validUpdateInput, degree: 'A' };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'degree', message: 'String must contain at least 2 character(s)' }
-//             ]);
-//             mockValidateUpdateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(updateEducation(invalidInput as unknown)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar cuando institution es muy larga', async () => {
-//             const longInstitution = 'A'.repeat(101);
-//             const invalidInput = { ...validUpdateInput, institution: longInstitution };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'institution', message: 'String must contain at most 100 character(s)' }
-//             ]);
-//             mockValidateUpdateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(updateEducation(invalidInput as unknown)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar cuando startDate es inválida', async () => {
-//             const invalidInput = { ...validUpdateInput, startDate: 'abc' };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'startDate', message: 'Invalid date format' }
-//             ]);
-//             mockValidateUpdateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(updateEducation(invalidInput as unknown)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar con múltiples errores de validación', async () => {
-//             const invalidInput = { id: '507f1f77bcf86cd799439011', degree: '', institution: '', startDate: 'abc' };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'degree', message: 'Required' },
-//                 { field: 'institution', message: 'Required' },
-//                 { field: 'startDate', message: 'Invalid date format' }
-//             ]);
-//             mockValidateUpdateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(updateEducation(invalidInput as unknown)).rejects.toThrow(ValidationError);
-//         });
-//     });
+    // ✅ HAPPY PATH TESTS
+    describe('✅ Happy Path - Actualización Exitosa', () => {
+        test('✅ Debe actualizar una educación exitosamente', async () => {
+            mockValidateId.mockReturnValue(validEducationId);
+            mockValidateUpdateEducation.mockReturnValue(validatedUpdateMock);
+            mockEducation.findOne.mockResolvedValue(null);
+            mockEducation.findByIdAndUpdate.mockResolvedValue(updatedEducationMock);
 
-//     // 🔄 DUPLICITY ERROR TESTS
-//     describe('❌ Duplicity Errors - Errores de Duplicidad', () => {
-//         test('❌ Debe fallar cuando existe educación con el mismo degree', async () => {
-//             mockValidateUpdateEducation.mockReturnValue(validatedUpdateMock);
-//             mockEducation.findOne = jest.fn().mockResolvedValue(updatedEducationMock);
-//             await expect(updateEducation(validUpdateInput as unknown)).rejects.toThrow(DuplicityError);
-//         });
-//     });
+            const result = await updateEducation(validInput);
 
-//     // ❌ NOT FOUND ERROR TESTS
-//     describe('❌ NotFound Errors - Errores de No Encontrado', () => {
-//         test('❌ Debe fallar si no existe la educación a actualizar', async () => {
-//             mockValidateUpdateEducation.mockReturnValue(validatedUpdateMock);
-//             mockEducation.findOne = jest.fn().mockResolvedValue(null); // No hay duplicidad
-//             mockEducation.findByIdAndUpdate = jest.fn().mockResolvedValue(null);
-//             await expect(updateEducation(validUpdateInput as unknown)).rejects.toThrow(NotFoundError);
-//         });
-//     });
+            expect(mockValidateId).toHaveBeenCalledWith(validEducationId);
+            expect(mockValidateUpdateEducation).toHaveBeenCalledWith({
+                institution: validInput.institution,
+                degree: validInput.degree,
+                field: validInput.field,
+                startDate: validInput.startDate,
+                endDate: validInput.endDate,
+                description: validInput.description
+            });
+            expect(mockEducation.findOne).toHaveBeenCalled();
+            expect(mockEducation.findByIdAndUpdate).toHaveBeenCalledWith(
+                validEducationId,
+                validatedUpdateMock,
+                { new: true, runValidators: true }
+            );
+            expect(result).toEqual(updatedEducationMock);
+        });
+    });
 
-//     // 💥 SYSTEM ERROR TESTS
-//     describe('❌ System Errors - Errores del Sistema', () => {
-//         test('❌ Debe manejar errores de base de datos', async () => {
-//             mockValidateUpdateEducation.mockReturnValue(validatedUpdateMock);
-//             mockEducation.findOne = jest.fn().mockResolvedValue(null); // No hay duplicidad
-//             mockEducation.findByIdAndUpdate = jest.fn().mockRejectedValue(new Error('DB Error'));
-//             await expect(updateEducation(validUpdateInput as unknown)).rejects.toThrow(SystemError);
-//         });
-//         test('❌ Debe manejar errores no-Error (unknown types)', async () => {
-//             mockValidateUpdateEducation.mockReturnValue(validatedUpdateMock);
-//             mockEducation.findOne = jest.fn().mockResolvedValue(null); // No hay duplicidad
-//             mockEducation.findByIdAndUpdate = jest.fn().mockRejectedValue('String error');
-//             await expect(updateEducation(validUpdateInput as unknown)).rejects.toThrow(SystemError);
-//         });
-//     });
-// });
+    // ❌ VALIDATION ERROR TESTS
+    describe('❌ Validation Errors - Errores de Validación', () => {
+        test('❌ Debe lanzar ValidationError si los datos son inválidos', async () => {
+            const validationError = new ValidationError('Datos inválidos', [{ field: 'degree', message: 'Requerido' }]);
+            mockValidateId.mockReturnValue(validEducationId);
+            mockValidateUpdateEducation.mockImplementation(() => { throw validationError; });
+
+            await expect(updateEducation({ ...validInput, degree: '' })).rejects.toThrow(ValidationError);
+        });
+    });
+
+    // ❌ DUPLICITY ERROR TESTS
+    describe('❌ Duplicity Errors - Errores de Duplicidad', () => {
+        test('❌ Debe lanzar DuplicityError si ya existe educación con ese degree o slug', async () => {
+            mockValidateId.mockReturnValue(validEducationId);
+            mockValidateUpdateEducation.mockReturnValue(validatedUpdateMock);
+            mockEducation.findOne.mockResolvedValue(updatedEducationMock);
+
+            await expect(updateEducation(validInput)).rejects.toThrow(DuplicityError);
+        });
+    });
+
+    // ❌ NOT FOUND ERROR TESTS
+    describe('❌ Not Found Errors - Educación No Encontrada', () => {
+        test('❌ Debe lanzar NotFoundError si no existe la educación', async () => {
+            mockValidateId.mockReturnValue(validEducationId);
+            mockValidateUpdateEducation.mockReturnValue(validatedUpdateMock);
+            mockEducation.findOne.mockResolvedValue(null);
+            mockEducation.findByIdAndUpdate.mockResolvedValue(null);
+
+            await expect(updateEducation(validInput)).rejects.toThrow(NotFoundError);
+        });
+    });
+
+    // ❌ SYSTEM ERROR TESTS
+    describe('❌ System Errors - Errores del Sistema', () => {
+        test('❌ Debe lanzar SystemError si ocurre un error inesperado', async () => {
+            mockValidateId.mockReturnValue(validEducationId);
+            mockValidateUpdateEducation.mockReturnValue(validatedUpdateMock);
+            mockEducation.findOne.mockResolvedValue(null);
+            mockEducation.findByIdAndUpdate.mockRejectedValue(new Error('DB Error'));
+
+            await expect(updateEducation(validInput)).rejects.toThrow(SystemError);
+        });
+    });
+});

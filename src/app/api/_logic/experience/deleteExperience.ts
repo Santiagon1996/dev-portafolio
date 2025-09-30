@@ -40,11 +40,11 @@ interface ExperienceInput {
     id: string;
 }
 
-export const addExperience = async (experienceData: ExperienceInput): Promise<IExperience> => {
+export const deleteExperience = async (experienceData: ExperienceInput): Promise<IExperience> => {
 
     try {
 
-        const validatedId = validateId(experienceData);
+        const validatedId = validateId(experienceData.id);
 
 
 
@@ -59,7 +59,7 @@ export const addExperience = async (experienceData: ExperienceInput): Promise<IE
         }
 
 
-        console.log(`Experiencia eliminada exitosamente: ${deletedExperience._id} - "${deletedExperience.title}"`);
+        console.log(`Experiencia eliminada exitosamente: ${deletedExperience._id} - "${deletedExperience.role}"`);
 
         return deletedExperience;
     } catch (error: unknown) {
@@ -72,6 +72,10 @@ export const addExperience = async (experienceData: ExperienceInput): Promise<IE
             throw error;
         }
         if (error instanceof DuplicityError) {
+            console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
+            throw error; // Lo relanzas para que el handler externo lo maneje
+        }
+        if (error instanceof NotFoundError) {
             console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
             throw error; // Lo relanzas para que el handler externo lo maneje
         }

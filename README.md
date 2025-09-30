@@ -1,3 +1,32 @@
+# Mejoras propuestas para MVP.2
+
+## Validación dinámica de IDs (string/number)
+
+Actualmente, las funciones de negocio y validación aceptan el id como string. Para mayor flexibilidad y robustez, se propone en el MVP.2 permitir que los IDs sean tanto string como number usando Zod:
+
+```ts
+import { z } from "zod";
+const idSchema = z.union([z.string(), z.number()]);
+```
+
+Esto permite que la lógica acepte ambos tipos y los convierta internamente según necesidad, facilitando futuras migraciones o cambios de tipo sin refactorizar todo el código.
+
+**Ventajas:**
+
+- Menos fricción ante cambios de tipo en el modelo
+- Validación centralizada y flexible
+- Código más mantenible y escalable
+
+**Ejemplo de uso:**
+
+```ts
+function deleteBlog(input: { id: string | number }) {
+  const parsed = idSchema.parse(input.id);
+  const idStr = String(parsed);
+  // ... lógica de borrado usando idStr
+}
+```
+
 # Fullstack Portfolio
 
 Este proyecto es un portafolio web fullstack desarrollado con **Next.js** y **TypeScript**, pensado para mostrar de manera profesional mis habilidades, proyectos y experiencia como desarrollador.

@@ -1,8 +1,9 @@
 import { Admin, IAdmin } from "@lib/db/models/index";
 import { errors, validators } from "@shared";
+import { handleLogicError } from "@lib/helpers/handleLogicError";
 
 const { validateId } = validators;
-const { NotFoundError, SystemError, ValidationError } = errors;
+const { NotFoundError } = errors;
 
 /**
  * getAdminById - Función para obtener un administrador por ID de la base de datos.
@@ -51,28 +52,7 @@ export const getAdminById = async (adminData: AdminInput): Promise<Omit<IAdmin, 
     } catch (error: unknown) {
 
         // ** TS: Comprobación de tipo seguro usando instanceof para errores específicos **
-        if (error instanceof ValidationError) {
-            console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
-            throw error;
-        }
-        if (error instanceof NotFoundError) {
-            console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
-            throw error;
-        }
-
-        // ** TS: si el error es una instancia de Error, se maneja como tal **
-        if (error instanceof Error) {
-            console.error(`[SystemError] ${error.message}`);
-            throw new SystemError(
-                "Ocurrió un error inesperado. Por favor, intenta nuevamente más tarde.",
-                { message: error.message }
-            );
-        }
-        // ** TS: para cualquier otro tipo de error se convierte a string **
-        console.error(`[UnknownError] ${String(error)}`);
-        throw new SystemError(
-            "Error desconocido. Contacte a soporte.",
-            { message: String(error) }
-        );
+        // ** TS: Si el error es una instancia de ValidationError o NotFoundError, se maneja específicamente **
+        handleLogicError(error)
     }
 };

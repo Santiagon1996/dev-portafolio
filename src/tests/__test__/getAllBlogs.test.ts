@@ -62,7 +62,7 @@
 // ** IMPORTS **
 import { getAllBlogs } from '@app/api/_logic/blog/getAllBlogs';
 import { BlogPost } from '@lib/db/models/index';
-import { SystemError, NotFoundError } from '@shared/errors/errors';
+import { SystemError } from '@shared/errors/errors';
 
 // ** MOCKS **
 jest.mock('@lib/db/models/index');
@@ -355,7 +355,7 @@ describe('🧪 getAllBlogs - Test Suite Completo', () => {
             mockBlogPost.countDocuments.mockResolvedValue(2);
 
             // Act
-            const result = await getAllBlogs(options);
+            await getAllBlogs(options);
 
             // Assert
             expect(mockBlogPost.find).toHaveBeenCalledWith({
@@ -587,10 +587,28 @@ describe('🧪 getAllBlogs - Test Suite Completo', () => {
 
     // ❌ NOT FOUND ERROR TESTS
     describe('❌ NotFoundError - Errores de no encontrado', () => {
-        test('❌ Debe lanzar NotFoundError si no hay blogs encontrados', async () => {
-            mockBlogPost.find.mockResolvedValue([]);
+        test('❌ Debe retornar objeto vacío si no hay blogs encontrados', async () => {
+            // Mock completo para simular la cadena de métodos de Mongoose
+            const mockQuery = {
+                sort: jest.fn(),
+                skip: jest.fn(),
+                limit: jest.fn(),
+                exec: jest.fn().mockResolvedValue([])
+            };
+            mockQuery.sort.mockReturnValue(mockQuery);
+            mockQuery.skip.mockReturnValue(mockQuery);
+            mockQuery.limit.mockReturnValue(mockQuery);
+
+            mockBlogPost.find.mockReturnValue(mockQuery as never);
             mockBlogPost.countDocuments.mockResolvedValue(0);
-            await expect(getAllBlogs()).rejects.toThrow(NotFoundError);
+
+            const result = await getAllBlogs();
+            expect(result).toEqual({
+                blogs: [],
+                total: 0,
+                page: 1,
+                totalPages: 0
+            });
         });
     });
 

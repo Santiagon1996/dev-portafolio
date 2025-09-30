@@ -1,185 +1,149 @@
-// import { addEducation } from '@app/api/_logic/education/addEducation';
-// import { Education, IEducation } from '@lib/db/models/index';
-// import { ValidationError, DuplicityError, SystemError } from '@shared/errors/errors';
-// import { validateEducation } from '@shared/validate/validate';
+/**
+ * 🧪 ADD EDUCATION - TEST SUITE COMPLETO
+ *
+ * Casos cubiertos:
+ * ✅ Happy Path - Crea la educación correctamente
+ * ❌ ValidationError - Datos inválidos
+ * ❌ DuplicityError - Educación duplicada
+ * ❌ SystemError - Error inesperado
+ * ❌ SystemError genérico - Error desconocido
+ */
 
-// // 🧪 MOCKS - Simulamos las dependencias
-// jest.mock('@lib/db/models/index');
-// jest.mock('@shared/validate/validate');
+import { addEducation } from '@app/api/_logic/education/addEducation';
+import { Education } from '@lib/db/models/index';
+import { validators, errors } from '@shared';
+import { slugify } from '@lib/utils/slugify';
 
-// const mockEducation = Education as jest.Mocked<typeof Education>;
-// const mockValidateEducation = validateEducation as jest.MockedFunction<typeof validateEducation>;
+const { ValidationError, DuplicityError, SystemError } = errors;
 
-// interface EducationInputTest {
-//     degree: string;
-//     institution: string;
-//     field: string;
-//     startDate: string;
-//     endDate: string;
-//     description: string;
-// }
+jest.mock('@lib/db/models/index');
+jest.mock('@shared', () => ({
+    validators: {
+        validateEducation: jest.fn(),
+    },
+    errors: {
+        ValidationError: class ValidationError extends Error {
+            constructor(message?: string, public details?: Record<string, unknown>) {
+                super(message);
+                this.name = 'ValidationError';
+            }
+        },
+        DuplicityError: class DuplicityError extends Error {
+            constructor(message?: string, public details?: Record<string, unknown>) {
+                super(message);
+                this.name = 'DuplicityError';
+            }
+        },
+        SystemError: class SystemError extends Error {
+            constructor(message?: string, public details?: Record<string, unknown>) {
+                super(message);
+                this.name = 'SystemError';
+            }
+        },
+    },
+}));
+jest.mock('@lib/utils/slugify');
 
-// describe('🧪 addEducation - Test Suite Completo', () => {
-//     beforeEach(() => {
-//         jest.clearAllMocks();
-//         jest.spyOn(console, 'error').mockImplementation(() => { });
-//     });
-//     afterEach(() => {
-//         jest.restoreAllMocks();
-//     });
+describe('🧪 addEducation - Test Suite Completo', () => {
+    const mockValidateEducation = validators.validateEducation as jest.MockedFunction<typeof validators.validateEducation>;
+    const mockFindOne = Education.findOne as jest.MockedFunction<typeof Education.findOne>;
+    const mockCreate = Education.create as jest.MockedFunction<typeof Education.create>;
+    const mockSlugify = slugify as jest.MockedFunction<typeof slugify>;
 
-//     const validEducationInput: EducationInputTest = {
-//         degree: 'Ingeniería en Sistemas',
-//         institution: 'Universidad Nacional',
-//         field: 'Informática',
-//         startDate: '2020-03-01',
-//         endDate: '2025-12-01',
-//         description: 'Carrera universitaria completa en sistemas e informática.'
-//     };
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
-//     const validatedDataMock = {
-//         degree: 'Ingeniería en Sistemas',
-//         institution: 'Universidad Nacional',
-//         field: 'Informática',
-//         startDate: '2020-03-01',
-//         endDate: '2025-12-01',
-//         description: 'Carrera universitaria completa en sistemas e informática.'
-//     };
+    test('✅ Debe crear la educación correctamente', async () => {
+        const input = {
+            degree: 'Ingeniería',
+            institution: 'Universidad',
+            field: 'Sistemas',
+            startDate: new Date('2020-01-01'),
+            endDate: new Date('2024-01-01'),
+            description: 'Descripción',
+        };
+        const validated = { ...input };
+        // @ts-expect-error forzamos un error no estándar
+        mockValidateEducation.mockReturnValue(validated);
+        mockSlugify.mockReturnValue('ingenieria');
+        mockFindOne.mockResolvedValue(null);
+        const createdDoc = { ...validated, _id: 'id123', slug: 'ingenieria' };
+        // @ts-expect-error forzamos un error no estándar
+        mockCreate.mockResolvedValue(createdDoc);
 
-//     const createdEducationMock: IEducation = {
-//         _id: '507f1f77bcf86cd799439011',
-//         ...validatedDataMock
-//     } as unknown as IEducation;
+        const result = await addEducation(input);
+        expect(result).toEqual(createdDoc);
+        expect(mockValidateEducation).toHaveBeenCalledWith(input);
+        expect(mockSlugify).toHaveBeenCalledWith(validated.degree);
+        expect(mockFindOne).toHaveBeenCalledWith({ $or: [{ degree: validated.degree }, { slug: 'ingenieria' }] });
+        expect(mockCreate).toHaveBeenCalledWith(validated);
+    });
 
-//     // 🎯 HAPPY PATH TESTS
-//     describe('✅ Happy Path - Casos Exitosos', () => {
-//         test('✅ Debe crear una educación exitosamente con todos los campos', async () => {
-//             mockValidateEducation.mockReturnValue(validatedDataMock);
-//             mockEducation.findOne = jest.fn().mockResolvedValue(null);
-//             mockEducation.create.mockResolvedValue(createdEducationMock as never);
+    test('❌ Debe lanzar ValidationError si los datos son inválidos', async () => {
+        mockValidateEducation.mockImplementation(() => { throw new ValidationError('Datos inválidos'); });
+        await expect(addEducation({ degree: '', institution: '', field: '', startDate: new Date(), endDate: new Date(), description: '' })).rejects.toThrow(ValidationError);
+        expect(mockFindOne).not.toHaveBeenCalled();
+        expect(mockCreate).not.toHaveBeenCalled();
+    });
 
-//             const result = await addEducation(validEducationInput);
-//             expect(mockValidateEducation).toHaveBeenCalledWith(validEducationInput);
-//             expect(mockEducation.findOne).toHaveBeenCalledWith({
-//                 $or: [
-//                     { degree: validEducationInput.degree },
-//                     { slug: expect.any(String) }
-//                 ]
-//             });
-//             expect(mockEducation.create).toHaveBeenCalledWith(validatedDataMock);
-//             expect(result).toEqual(createdEducationMock);
-//         });
-//     });
+    test('❌ Debe lanzar DuplicityError si ya existe educación con ese título o slug', async () => {
+        const input = {
+            degree: 'Ingeniería',
+            institution: 'Universidad',
+            field: 'Sistemas',
+            startDate: new Date('2020-01-01'),
+            endDate: new Date('2024-01-01'),
+            description: 'Descripción',
+        };
+        const validated = { ...input };
+        // @ts-expect-error forzamos un error no estándar
+        mockValidateEducation.mockReturnValue(validated);
+        mockSlugify.mockReturnValue('ingenieria');
+        const existingDoc = { _id: 'id456', degree: 'Ingeniería', slug: 'ingenieria' };
+        mockFindOne.mockResolvedValue(existingDoc as unknown);
 
-//     // 💥 VALIDATION ERROR TESTS
-//     describe('❌ Validation Errors - Errores por Campo', () => {
-//         test('❌ Debe fallar cuando degree es muy corto', async () => {
-//             const invalidInput = { ...validEducationInput, degree: 'A' };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'degree', message: 'String must contain at least 2 character(s)' }
-//             ]);
-//             mockValidateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(addEducation(invalidInput)).rejects.toThrow(ValidationError);
-//             expect(mockValidateEducation).toHaveBeenCalledWith(invalidInput);
-//         });
-//         test('❌ Debe fallar cuando degree es muy largo', async () => {
-//             const longDegree = 'A'.repeat(101);
-//             const invalidInput = { ...validEducationInput, degree: longDegree };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'degree', message: 'String must contain at most 100 character(s)' }
-//             ]);
-//             mockValidateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(addEducation(invalidInput)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar cuando falta institution', async () => {
-//             const invalidInput = { ...validEducationInput };
-//             delete invalidInput.institution;
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'institution', message: 'Required' }
-//             ]);
-//             mockValidateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(addEducation(invalidInput as EducationInputTest)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar cuando institution es muy corta', async () => {
-//             const invalidInput = { ...validEducationInput, institution: 'A' };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'institution', message: 'String must contain at least 2 character(s)' }
-//             ]);
-//             mockValidateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(addEducation(invalidInput)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar cuando institution es muy larga', async () => {
-//             const longInstitution = 'A'.repeat(101);
-//             const invalidInput = { ...validEducationInput, institution: longInstitution };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'institution', message: 'String must contain at most 100 character(s)' }
-//             ]);
-//             mockValidateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(addEducation(invalidInput)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar cuando startDate es inválida', async () => {
-//             const invalidInput: unknown = { ...validEducationInput, startDate: 'abc' };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'startDate', message: 'Invalid date format' }
-//             ]);
-//             mockValidateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(addEducation(invalidInput as EducationInputTest)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar cuando endDate es inválida', async () => {
-//             const invalidInput: unknown = { ...validEducationInput, endDate: 'xyz' };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'endDate', message: 'Invalid date format' }
-//             ]);
-//             mockValidateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(addEducation(invalidInput as EducationInputTest)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar cuando description es muy larga', async () => {
-//             const longDescription = 'A'.repeat(501);
-//             const invalidInput = { ...validEducationInput, description: longDescription };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'description', message: 'String must contain at most 500 character(s)' }
-//             ]);
-//             mockValidateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(addEducation(invalidInput)).rejects.toThrow(ValidationError);
-//         });
-//         test('❌ Debe fallar con múltiples errores de validación', async () => {
-//             const invalidInput: unknown = { degree: '', institution: '', field: '', startDate: '', endDate: '', description: '' };
-//             const validationError = new ValidationError('Validation failed for education', [
-//                 { field: 'degree', message: 'Required' },
-//                 { field: 'institution', message: 'Required' },
-//                 { field: 'startDate', message: 'Invalid date format' }
-//             ]);
-//             mockValidateEducation.mockImplementation(() => { throw validationError; });
-//             await expect(addEducation(invalidInput as EducationInputTest)).rejects.toThrow(ValidationError);
-//         });
-//     });
+        await expect(addEducation(input)).rejects.toThrow(DuplicityError);
+        expect(mockCreate).not.toHaveBeenCalled();
+    });
 
-//     // 🔄 DUPLICITY ERROR TESTS
-//     describe('❌ Duplicity Errors - Errores de Duplicidad', () => {
-//         test('❌ Debe fallar cuando existe educación con el mismo degree', async () => {
-//             mockValidateEducation.mockReturnValue(validatedDataMock);
-//             mockEducation.findOne = jest.fn().mockResolvedValue(createdEducationMock);
-//             await expect(addEducation(validEducationInput)).rejects.toThrow(DuplicityError);
-//         });
-//     });
+    test('❌ Debe lanzar SystemError si ocurre un error inesperado', async () => {
+        const input = {
+            degree: 'Ingeniería',
+            institution: 'Universidad',
+            field: 'Sistemas',
+            startDate: new Date('2020-01-01'),
+            endDate: new Date('2024-01-01'),
+            description: 'Descripción',
+        };
+        const validated = { ...input };
+        // @ts-expect-error forzamos un error no estándar
+        mockValidateEducation.mockReturnValue(validated);
+        mockSlugify.mockReturnValue('ingenieria');
+        mockFindOne.mockResolvedValue(null);
+        mockCreate.mockRejectedValue(new Error('DB fail'));
 
-//     // 💥 SYSTEM ERROR TESTS
-//     describe('❌ System Errors - Errores del Sistema', () => {
-//         test('❌ Debe manejar errores de base de datos', async () => {
-//             mockValidateEducation.mockReturnValue(validatedDataMock);
-//             mockEducation.findOne = jest.fn().mockRejectedValue(new Error('DB Error'));
-//             await expect(addEducation(validEducationInput)).rejects.toThrow(SystemError);
-//         });
-//         test('❌ Debe manejar error en Education.create()', async () => {
-//             mockValidateEducation.mockReturnValue(validatedDataMock);
-//             mockEducation.findOne = jest.fn().mockResolvedValue(null);
-//             mockEducation.create.mockRejectedValue(new Error('Create Error'));
-//             await expect(addEducation(validEducationInput)).rejects.toThrow(SystemError);
-//         });
-//         test('❌ Debe manejar errores no-Error (unknown types)', async () => {
-//             mockValidateEducation.mockReturnValue(validatedDataMock);
-//             mockEducation.findOne = jest.fn().mockRejectedValue('String error');
-//             await expect(addEducation(validEducationInput)).rejects.toThrow(SystemError);
-//         });
-//     });
-// });
+        await expect(addEducation(input)).rejects.toThrow(SystemError);
+        await expect(addEducation(input)).rejects.toThrow('Ocurrió un error inesperado. Por favor, intenta nuevamente más tarde.');
+    });
+
+    test('❌ Debe lanzar SystemError genérico si el error es desconocido', async () => {
+        const input = {
+            degree: 'Ingeniería',
+            institution: 'Universidad',
+            field: 'Sistemas',
+            startDate: new Date('2020-01-01'),
+            endDate: new Date('2024-01-01'),
+            description: 'Descripción',
+        };
+        const validated = { ...input };
+        // @ts-expect-error forzamos un error no estándar
+        mockValidateEducation.mockReturnValue(validated);
+        mockSlugify.mockReturnValue('ingenieria');
+        mockFindOne.mockResolvedValue(null);
+        mockCreate.mockImplementation(() => { throw 'Unknown error'; });
+
+        await expect(addEducation(input)).rejects.toThrow(SystemError);
+        await expect(addEducation(input)).rejects.toThrow('Error desconocido. Contacte a soporte.');
+    });
+});

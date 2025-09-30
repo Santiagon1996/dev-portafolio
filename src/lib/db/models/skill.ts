@@ -2,11 +2,12 @@ import { Schema, Document, models, model } from "mongoose";
 
 export interface ISkill extends Document {
     name: string;
-    level?: "beginner" | "intermediate" | "advanced";
-    category?: string; // frontend, backend, tools, etc
-    icon?: string; // nombre de ícono o URL
-    color?: string; // color opcional (ej. para badges)
+    level?: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+    category?: "Frontend" | "Backend" | "DevOps" | "Database" | "Other";
+    icon?: string;
+    color?: string;
 }
+
 
 const skillSchema = new Schema<ISkill>(
     {
@@ -18,11 +19,12 @@ const skillSchema = new Schema<ISkill>(
         },
         level: {
             type: String,
-            enum: ["beginner", "intermediate", "advanced"],
-            default: "intermediate",
+            enum: ["Beginner", "Intermediate", "Advanced", "Expert"],
+            default: "Intermediate",
         },
         category: {
             type: String,
+            enum: ["Frontend", "Backend", "DevOps", "Database", "Other"],
             trim: true,
             lowercase: true,
         },
