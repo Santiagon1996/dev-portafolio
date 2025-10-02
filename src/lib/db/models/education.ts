@@ -1,4 +1,6 @@
 import { Schema, Document, model, models } from "mongoose";
+import { slugify } from "../../utils/slugify"
+
 
 export interface IEducation extends Document {
     institution: string;
@@ -7,6 +9,8 @@ export interface IEducation extends Document {
     startDate: Date;
     endDate?: Date;
     description?: string;
+    slug: string;
+
 }
 
 const educationSchema = new Schema<IEducation>(
@@ -37,6 +41,8 @@ const educationSchema = new Schema<IEducation>(
             type: String,
             trim: true,
         },
+        slug: { type: String, required: true, unique: true, trim: true },
+
     },
     {
         timestamps: true,
@@ -44,6 +50,20 @@ const educationSchema = new Schema<IEducation>(
     }
 );
 
+educationSchema.pre("validate", function (next) {
+    if (this.isNew || this.isModified("degree")) {
+        this.slug = slugify(this.degree);
+    }
+    next();
+});
+
+educationSchema.pre("findOneAndUpdate", function (next) {
+    const update = this.getUpdate();
+    if (update && typeof update === "object" && "degree" in update && typeof update.degree === "string") {
+        (update as { [key: string]: unknown; slug?: string; degree?: string }).slug = slugify(update.degree);
+    }
+    next();
+});
 const Education = models.Education || model<IEducation>("Education", educationSchema);
 
 export { Education };

@@ -1,4 +1,4 @@
-import { getAllProjects } from "@app/api/_logic/project/getAllProject";
+import { getAllProjects } from "@app/api/_logic/project/getAllProjects";
 import { Project } from "@lib/db/models/index";
 import { errors } from "@shared";
 

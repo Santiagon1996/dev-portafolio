@@ -1,4 +1,7 @@
 import { Schema, Document, models, model } from "mongoose";
+import { slugify } from "../../utils/slugify"
+
+
 
 export interface IExperience extends Document {
     company: string;
@@ -9,6 +12,8 @@ export interface IExperience extends Document {
     location?: string;
     technologies?: string[];
     isCurrent?: boolean;
+    slug: string;
+
 }
 
 const experienceSchema = new Schema<IExperience>(
@@ -46,13 +51,27 @@ const experienceSchema = new Schema<IExperience>(
             type: Boolean,
             default: false,
         },
+        slug: { type: String, required: true, unique: true, trim: true },
     },
     {
         timestamps: true,
         versionKey: false,
     }
 );
+experienceSchema.pre("validate", function (next) {
+    if (this.isNew || this.isModified("role")) {
+        this.slug = slugify(this.role);
+    }
+    next();
+});
 
+experienceSchema.pre("findOneAndUpdate", function (next) {
+    const update = this.getUpdate();
+    if (update && typeof update === "object" && "role" in update && typeof update.role === "string") {
+        (update as { [key: string]: unknown; slug?: string; role?: string }).slug = slugify(update.role);
+    }
+    next();
+});
 const Experience = models.Experience || model<IExperience>("Experience", experienceSchema);
 
 export { Experience };

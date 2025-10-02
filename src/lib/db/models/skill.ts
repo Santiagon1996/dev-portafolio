@@ -1,4 +1,6 @@
 import { Schema, Document, models, model } from "mongoose";
+import { slugify } from "../../utils/slugify"
+
 
 export interface ISkill extends Document {
     name: string;
@@ -6,6 +8,7 @@ export interface ISkill extends Document {
     category?: "Frontend" | "Backend" | "DevOps" | "Database" | "Other";
     icon?: string;
     color?: string;
+    slug: string;
 }
 
 
@@ -26,7 +29,6 @@ const skillSchema = new Schema<ISkill>(
             type: String,
             enum: ["Frontend", "Backend", "DevOps", "Database", "Other"],
             trim: true,
-            lowercase: true,
         },
         icon: {
             type: String,
@@ -36,12 +38,27 @@ const skillSchema = new Schema<ISkill>(
             type: String,
             trim: true,
         },
+        slug: { type: String, required: true, unique: true, trim: true },
     },
     {
         timestamps: true,
         versionKey: false,
     }
 );
+skillSchema.pre("validate", function (next) {
+    if (this.isNew || this.isModified("name")) {
+        this.slug = slugify(this.name);
+    }
+    next();
+});
+
+skillSchema.pre("findOneAndUpdate", function (next) {
+    const update = this.getUpdate();
+    if (update && typeof update === "object" && "name" in update && typeof update.name === "string") {
+        (update as { [key: string]: unknown; slug?: string; name?: string }).slug = slugify(update.name);
+    }
+    next();
+});
 
 const Skill = models.Skill || model<ISkill>("Skill", skillSchema);
 

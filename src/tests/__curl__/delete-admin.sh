@@ -9,8 +9,8 @@ NC='\033[0m' # No Color
 
 # Variables de configuración
 API_BASE_URL="http://localhost:3000/api/admin"
-ADMIN_ID="689ca7fde08e767644b5eaf2" # Cambiar por ID válido
-ACCESS_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OWNhN2ZkZTA4ZTc2NzY0NGI1ZWFmMiIsImlhdCI6MTc1NTA5NzEzOSwiZXhwIjoxNzU1MTAwNzM5fQ.uinYByDnbKDJLccI1wJPrauYdqbz3GHSWtB7A8xyMQM" # Cambiar por JWT válido
+ADMIN_ID="68dce63aadcf03f68135bdc0" # Cambiar por ID válido
+ACCESS_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZGNlNjNhYWRjZjAzZjY4MTM1YmRjMCIsImlhdCI6MTc1OTMwNzMzNywiZXhwIjoxNzU5MzEwOTM3fQ.egg-rhlqw1F8lOP7_lh3-yFvh-z8au-r_YaMalbFTg0" # Cambiar por JWT válido
 
 echo -e "${BLUE}=== TESTS PARA RUTA DELETE /api/admin/[adminId] CON COOKIE ===${NC}"
 echo -e "${BLUE}Admin ID: ${ADMIN_ID}${NC}\n"

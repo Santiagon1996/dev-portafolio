@@ -1,11 +1,11 @@
 import { connectToDatabase } from "@lib/db/connection";
 import { withErrorHandler } from "@lib/helpers/withErrorHandler";
-import { addBlog, getAllBlogs } from "../_logic/blog/index";
+import { addProject, getAllProjects } from "../_logic/project/index";
 import { NextResponse, NextRequest } from "next/server";
 import { withAuth } from "@lib/middleware/withAuth";
 
 
-// GET /api/blog - Obtener todos los blogs con paginación
+// GET /api/project - Obtener todos los proyectos con paginación
 export async function GET(req: NextRequest) {
     return await withErrorHandler(
         async (req) => {
@@ -21,16 +21,14 @@ export async function GET(req: NextRequest) {
             page = page > 0 ? page : 1;        // Si page <= 0, usar 1
             limit = limit > 0 ? limit : 10;    // Si limit <= 0, usar 10
 
-            const isPublished = searchParams.get('isPublished') === 'true';
-            const tags = searchParams.get('tags')?.split(',').filter(Boolean);
-            const author = searchParams.get('author') || undefined;
+            const title = searchParams.get('title') || undefined;
+            const repoUrl = searchParams.get('repoUrl') || undefined;
 
-            const result = await getAllBlogs({
+            const result = await getAllProjects({
                 page,
                 limit,
-                isPublished,
-                tags,
-                author
+                repoUrl,
+                title
             });
 
             return NextResponse.json(result, { status: 200 });
@@ -38,15 +36,15 @@ export async function GET(req: NextRequest) {
     )(req, { params: {} });
 }
 
-// POST /api/blog - Crear nuevo blog (requiere autenticación)
+// POST /api/project - Crear nuevo proyecto (requiere autenticación)
 export async function POST(req: NextRequest) {
     return await withErrorHandler(
         withAuth(
             async (req) => {
                 await connectToDatabase();
-                const blogData = await req.json();
-                const newBlog = await addBlog(blogData);
-                return NextResponse.json(newBlog, { status: 201 });
+                const projectData = await req.json();
+                const newProject = await addProject(projectData);
+                return NextResponse.json(newProject, { status: 201 });
             }
         )
     )(req, { params: {} });

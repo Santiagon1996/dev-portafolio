@@ -1,5 +1,7 @@
 
 import { Schema, Document, model, models } from "mongoose";
+import { slugify } from "../../utils/slugify"
+
 
 /**
  * 1️⃣ Tipado con TypeScript:
@@ -16,6 +18,8 @@ export interface IProject extends Document {
     tags?: string[];
     featured: boolean;
     createdAt?: Date;
+    slug: string;
+
 }
 
 const projectSchema = new Schema<IProject>(// <- Aquí usamos la interfaz IProject para tipar el esquema
@@ -56,13 +60,27 @@ const projectSchema = new Schema<IProject>(// <- Aquí usamos la interfaz IProje
             type: Date,
             default: Date.now,
         },
+        slug: { type: String, required: true, unique: true, trim: true },
     },
     {
         timestamps: true,
         versionKey: false,
     }
 );
+projectSchema.pre("validate", function (next) {
+    if (this.isNew || this.isModified("title")) {
+        this.slug = slugify(this.title);
+    }
+    next();
+});
 
+projectSchema.pre("findOneAndUpdate", function (next) {
+    const update = this.getUpdate();
+    if (update && typeof update === "object" && "title" in update && typeof update.title === "string") {
+        (update as { [key: string]: unknown; slug?: string; title?: string }).slug = slugify(update.title);
+    }
+    next();
+});
 const Project = models.Project || model<IProject>("Project", projectSchema);
 
 export { Project };

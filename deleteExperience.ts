@@ -9,7 +9,7 @@ const { SystemError, ValidationError, DuplicityError, NotFoundError } = errors;
  * deleteExperience - Función para eliminar un post de experiencia en la base de datos.
  *
  * @param experienceData - Objeto con las propiedades necesarias para eliminar un ExperiencePost (title, content, etc.).
- * @returns Promise<IExperiencePost> - Retorna una promesa que resuelve con una experiencia eliminada.
+ * @returns Promise<IExperiencePost> - Retorna una promesa que resuelve con una Experience eliminada.
  *
  *  Explicación:
  * 1. Se define la interfaz ExperienceInput para tipar claramente la estructura de entrada esperada (solo ID).
@@ -59,7 +59,7 @@ export const deleteExperience = async (experienceData: ExperienceInput): Promise
         }
 
 
-        console.log(`Experiencia eliminada exitosamente: ${deletedExperience._id} - "${deletedExperience.title}"`);
+        console.log(`Experiencia eliminada exitosamente: ${deletedExperience._id} - "${deletedExperience.role}"`);
 
         return deletedExperience;
     } catch (error: unknown) {
@@ -75,7 +75,6 @@ export const deleteExperience = async (experienceData: ExperienceInput): Promise
             console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
             throw error; // Lo relanzas para que el handler externo lo maneje
         }
-
         if (error instanceof NotFoundError) {
             console.error(`[${error.name}] ${error.message}, Detalles:`, error.details);
             throw error; // Lo relanzas para que el handler externo lo maneje

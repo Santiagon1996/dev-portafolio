@@ -1,11 +1,11 @@
 import { connectToDatabase } from "@lib/db/connection";
 import { withErrorHandler } from "@lib/helpers/withErrorHandler";
-import { addBlog, getAllBlogs } from "../_logic/blog/index";
+import { addExperience, getAllExperience } from "../_logic/experience/index";
 import { NextResponse, NextRequest } from "next/server";
 import { withAuth } from "@lib/middleware/withAuth";
 
 
-// GET /api/blog - Obtener todos los blogs con paginación
+// GET /api/experience - Obtener todas las experiencias con paginación
 export async function GET(req: NextRequest) {
     return await withErrorHandler(
         async (req) => {
@@ -21,16 +21,14 @@ export async function GET(req: NextRequest) {
             page = page > 0 ? page : 1;        // Si page <= 0, usar 1
             limit = limit > 0 ? limit : 10;    // Si limit <= 0, usar 10
 
-            const isPublished = searchParams.get('isPublished') === 'true';
-            const tags = searchParams.get('tags')?.split(',').filter(Boolean);
-            const author = searchParams.get('author') || undefined;
+            const role = searchParams.get('role') || undefined;
+            const technologies = searchParams.get('technologies') || undefined;
 
-            const result = await getAllBlogs({
+            const result = await getAllExperience({
                 page,
                 limit,
-                isPublished,
-                tags,
-                author
+                technologies,
+                role
             });
 
             return NextResponse.json(result, { status: 200 });
@@ -38,15 +36,15 @@ export async function GET(req: NextRequest) {
     )(req, { params: {} });
 }
 
-// POST /api/blog - Crear nuevo blog (requiere autenticación)
+// POST /api/experience - Crear nueva experiencia (requiere autenticación)
 export async function POST(req: NextRequest) {
     return await withErrorHandler(
         withAuth(
             async (req) => {
                 await connectToDatabase();
-                const blogData = await req.json();
-                const newBlog = await addBlog(blogData);
-                return NextResponse.json(newBlog, { status: 201 });
+                const experienceData = await req.json();
+                const newExperience = await addExperience(experienceData);
+                return NextResponse.json(newExperience, { status: 201 });
             }
         )
     )(req, { params: {} });

@@ -9,8 +9,8 @@ NC='\033[0m' # No Color
 
 # Variables de configuración
 API_BASE_URL="http://localhost:3000/api/admin"
-ADMIN_ID="689ca7fde08e767644b5eaf2" # Cambiar por ID válido
-ACCESS_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OWNhN2ZkZTA4ZTc2NzY0NGI1ZWFmMiIsImlhdCI6MTc1NTA5NzEzOSwiZXhwIjoxNzU1MTAwNzM5fQ.uinYByDnbKDJLccI1wJPrauYdqbz3GHSWtB7A8xyMQM" # Cambiar por JWT válido
+ADMIN_ID="68dcdea4adcf03f68135bdab" # Cambiar por ID válido
+ACCESS_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZGNkZWE0YWRjZjAzZjY4MTM1YmRhYiIsImlhdCI6MTc1OTMwNjMyMiwiZXhwIjoxNzU5MzA5OTIyfQ.2iN_TXefGHJejipDSPHFCsLkhkqn8Hy9Sp9TKuE7Emk" # Cambiar por JWT válido
 
 echo -e "${BLUE}=== TESTS PARA RUTA PATCH /api/admin/[adminId] ===${NC}"
 echo -e "${BLUE}Admin ID: ${ADMIN_ID}${NC}\n"

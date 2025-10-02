@@ -10,6 +10,9 @@ NC='\033[0m' # No Color
 
 API_URL="http://localhost:3000/api/blog"
 
+ADMIN_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZGNlYTQ2YWRjZjAzZjY4MTM1YmRjYSIsImlhdCI6MTc1OTMwODM2NSwiZXhwIjoxNzU5MzExOTY1fQ.4EXo9Bgk0ju7lK1SkiYpGuoAXq3CrVXhCt717vS519w" # <-- Pon aquí tu token JWT
+
+
 echo -e "${BLUE}🚀 TESTING ADD BLOG ENDPOINT${NC}"
 echo -e "${BLUE}===== Basado en casos de addBlog.test.ts =====${NC}\n"
 
@@ -18,6 +21,7 @@ echo -e "${GREEN}✅ === HAPPY PATH TESTS ===${NC}\n"
 
 echo -e "${YELLOW}Test 1: Blog completo con todos los campos${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Guía Completa de TypeScript para Desarrolladores",
@@ -32,6 +36,7 @@ echo -e "${GREEN}✅ Esperado: 201 Created${NC}\n"
 
 echo -e "${YELLOW}Test 2: Blog mínimo (solo campos obligatorios)${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Post Básico con Contenido Suficiente",
@@ -41,6 +46,7 @@ echo -e "${GREEN}✅ Esperado: 201 Created${NC}\n"
 
 echo -e "${YELLOW}Test 3: Blog con campos opcionales null/undefined${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Blog con Campos Opcionales Vacíos",
@@ -57,6 +63,7 @@ echo -e "\n${RED}❌ === VALIDATION ERROR TESTS ===${NC}\n"
 
 echo -e "${YELLOW}Test 4: Título muy corto (< 5 caracteres)${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Hi",
@@ -66,6 +73,7 @@ echo -e "${RED}❌ Esperado: 400 - ValidationError (título muy corto)${NC}\n"
 
 echo -e "${YELLOW}Test 5: Título muy largo (> 200 caracteres)${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Este es un título extremadamente largo que excede los doscientos caracteres permitidos por la validación del schema de Zod y debería fallar completamente al intentar crear un blog con estas características tan específicas",
@@ -75,6 +83,7 @@ echo -e "${RED}❌ Esperado: 400 - ValidationError (título muy largo)${NC}\n"
 
 echo -e "${YELLOW}Test 6: Contenido muy corto (< 20 caracteres)${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Título Válido con Longitud Correcta",
@@ -94,6 +103,7 @@ echo -e "${RED}❌ Esperado: 400 - ValidationError (múltiples errores)${NC}\n"
 
 echo -e "${YELLOW}Test 8: Campos faltantes (sin título)${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "content": "Contenido válido pero falta el título obligatorio para crear el blog."
@@ -102,6 +112,7 @@ echo -e "${RED}❌ Esperado: 400 - ValidationError (título faltante)${NC}\n"
 
 echo -e "${YELLOW}Test 9: Campos faltantes (sin contenido)${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Título Válido pero Sin Contenido"
@@ -113,6 +124,7 @@ echo -e "\n${PURPLE}🔄 === DUPLICITY ERROR TESTS ===${NC}\n"
 
 echo -e "${YELLOW}Test 10: Duplicidad por título exacto${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Guía Completa de TypeScript para Desarrolladores",
@@ -122,6 +134,7 @@ echo -e "${RED}❌ Esperado: 409 - DuplicityError (título duplicado)${NC}\n"
 
 echo -e "${YELLOW}Test 11: Duplicidad por slug generado${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Guía COMPLETA de TypeScript PARA desarrolladores",
@@ -134,6 +147,7 @@ echo -e "\n${BLUE}🧪 === EDGE CASE TESTS ===${NC}\n"
 
 echo -e "${YELLOW}Test 12: Caracteres especiales y emojis${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Desarrollo Web con Emojis 🚀 y Símbolos Especiales @#$%",
@@ -145,6 +159,7 @@ echo -e "${GREEN}✅ Esperado: 201 Created (caracteres especiales manejados)${NC
 
 echo -e "${YELLOW}Test 13: Arrays vacíos vs null${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Blog para Probar Arrays Vacíos vs Null",
@@ -155,6 +170,7 @@ echo -e "${GREEN}✅ Esperado: 201 Created (arrays vacíos válidos)${NC}\n"
 
 echo -e "${YELLOW}Test 14: Fecha ISO válida${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Blog con Fecha de Publicación Específica",
@@ -169,6 +185,7 @@ echo -e "\n${RED}💥 === MALFORMED REQUEST TESTS ===${NC}\n"
 
 echo -e "${YELLOW}Test 15: JSON malformado${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "JSON mal formado",
@@ -179,6 +196,7 @@ echo -e "${RED}❌ Esperado: 400 - JSON Parse Error${NC}\n"
 
 echo -e "${YELLOW}Test 16: Content-Type incorrecto${NC}"
 curl -s -w "\nStatus: %{http_code}\n" -X POST $API_URL \
+-H "Cookie: accessToken=${ADMIN_TOKEN}" \
 -H "Content-Type: text/plain" \
 -d 'esto-no-es-json'
 echo -e "${RED}❌ Esperado: 400 - Invalid Content-Type${NC}\n"

@@ -81,6 +81,7 @@ export const updateExperienceSchema = experienceSchema.partial();
 export const educationSchema = z.object({
     degree: z.string().min(2).max(100),
     institution: z.string().min(2).max(100),
+    field: z.string().min(2).max(100),
     startDate: z.string().min(4),
     endDate: z.string().optional(),
     location: z.string().optional(),

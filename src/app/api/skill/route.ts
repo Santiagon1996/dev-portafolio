@@ -1,11 +1,11 @@
 import { connectToDatabase } from "@lib/db/connection";
 import { withErrorHandler } from "@lib/helpers/withErrorHandler";
-import { addBlog, getAllBlogs } from "../_logic/blog/index";
+import { addSkill, getAllSkills } from "../_logic/skills/index";
 import { NextResponse, NextRequest } from "next/server";
 import { withAuth } from "@lib/middleware/withAuth";
 
 
-// GET /api/blog - Obtener todos los blogs con paginación
+// GET /api/skill - Obtener todos los skills con paginación
 export async function GET(req: NextRequest) {
     return await withErrorHandler(
         async (req) => {
@@ -21,16 +21,14 @@ export async function GET(req: NextRequest) {
             page = page > 0 ? page : 1;        // Si page <= 0, usar 1
             limit = limit > 0 ? limit : 10;    // Si limit <= 0, usar 10
 
-            const isPublished = searchParams.get('isPublished') === 'true';
-            const tags = searchParams.get('tags')?.split(',').filter(Boolean);
-            const author = searchParams.get('author') || undefined;
+            const name = searchParams.get('name') || undefined;
+            const level = searchParams.get('level') || undefined;
 
-            const result = await getAllBlogs({
+            const result = await getAllSkills({
                 page,
                 limit,
-                isPublished,
-                tags,
-                author
+                level,
+                name
             });
 
             return NextResponse.json(result, { status: 200 });
@@ -38,15 +36,15 @@ export async function GET(req: NextRequest) {
     )(req, { params: {} });
 }
 
-// POST /api/blog - Crear nuevo blog (requiere autenticación)
+// POST /api/skill - Crear nuevo skill (requiere autenticación)
 export async function POST(req: NextRequest) {
     return await withErrorHandler(
         withAuth(
             async (req) => {
                 await connectToDatabase();
-                const blogData = await req.json();
-                const newBlog = await addBlog(blogData);
-                return NextResponse.json(newBlog, { status: 201 });
+                const skillData = await req.json();
+                const newSkill = await addSkill(skillData);
+                return NextResponse.json(newSkill, { status: 201 });
             }
         )
     )(req, { params: {} });

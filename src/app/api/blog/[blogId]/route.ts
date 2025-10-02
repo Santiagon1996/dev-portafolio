@@ -7,7 +7,7 @@ import { NextResponse, NextRequest } from "next/server";
 export async function GET(req: NextRequest, { params }: { params: Promise<{ blogId: string }> }) {
     const resolvedParams = await params;
     return await withErrorHandler(
-        withAuth(async () => {
+        async () => {
             await connectToDatabase();
 
             const { blogId } = resolvedParams;
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ blog
 
             // Responder con el blog 
             return NextResponse.json(blog, { status: 200 });
-        })
+        }
     )(req, { params: resolvedParams });
 }
 

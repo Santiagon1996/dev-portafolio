@@ -9,8 +9,7 @@ PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
 
 API_URL="http://localhost:3000/api/blog"
-LOGIN_URL="http://localhost:3000/api/admin/login"
-COOKIE_JAR="/tmp/test_cookies_update.txt"
+ADMIN_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZGUyYjEzNWI5ZWQ4NmQxOGFhNzgwNyIsImlhdCI6MTc1OTM5MDQ5OSwiZXhwIjoxNzU5Mzk0MDk5fQ.O7YeAQ3elTdndMCPB3Thl9YbqVDXQqxHYefhY0vrt-Y" # <-- Pon aquí tu token JW
 BLOG_ID_INVALIDO="123"
 BLOG_ID_NO_EXISTE="0123456789abcdef01234567"
 
@@ -26,52 +25,14 @@ show_result() {
   echo -e "${GREEN}Esperado: $expected${NC}\n"
 }
 
-# Login y guardar cookie
-login_and_get_cookies() {
-  echo -e "${BLUE}🔐 Intentando login para obtener cookies...${NC}"
-  login_response=$(curl -s -w "\n%{http_code}" -c "$COOKIE_JAR" -X POST "$LOGIN_URL" \
-    -H "Content-Type: application/json" \
-    -d '{"username": "santiagoN", "password": "SuperSecure123"}')
-  login_body=$(echo "$login_response" | head -n -1)
-  login_status=$(echo "$login_response" | tail -n 1)
-  if [ "$login_status" = "200" ]; then
-    echo -e "${GREEN}✅ Login exitoso${NC}"
-    echo "Cookies guardadas en: $COOKIE_JAR"
-    return 0
-  else
-    echo -e "${RED}❌ Login falló. Status: $login_status${NC}"
-    echo "Response: $login_body"
-    echo "🔧 SOLUCIÓN: Verifica que exista un admin con username='santiagoN' y password='SuperSecure123'"
-    return 1
-  fi
-}
 
 # Crear blog de prueba y devolver su ID
-create_test_blog() {
-  local title="$1"
-  local content="$2"
-  response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X POST "$API_URL" \
-    -H "Content-Type: application/json" \
-    -d "{\"title\": \"$title\", \"content\": \"$content\"}")
-  body=$(echo "$response" | head -n -1)
-  status=$(echo "$response" | tail -n 1)
-  if [ "$status" = "201" ]; then
-    blog_id=$(echo "$body" | grep -o '"_id":"[^\"]*"' | cut -d'"' -f4)
-    echo "$blog_id"
-  else
-    echo ""
-  fi
-}
-
-# Login primero
-if ! login_and_get_cookies; then
-  echo -e "${RED}❌ No se pudo obtener autenticación. Abortando tests.${NC}"
-  exit 1
-fi
-
-echo -e "${BLUE}📋 Creando blog de prueba para PATCH...${NC}"
-BLOG_ID_VALIDO=$(create_test_blog "Blog para update" "Este es un blog que será actualizado en las pruebas. Tiene contenido suficiente para pasar la validación mínima.")
-if [ -z "$BLOG_ID_VALIDO" ]; then
+echo -e "${BLUE}� Creando blog de prueba para PATCH...${NC}"
+BLOG_ID_VALIDO=$(curl -s -X POST "$API_URL" \
+  -H "Cookie: accessToken=${ADMIN_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Blog para update", "content": "Este es un blog que será actualizado en las pruebas. Tiene contenido suficiente para pasar la validación mínima."}' | jq -r '._id')
+if [ -z "$BLOG_ID_VALIDO" ] || [ "$BLOG_ID_VALIDO" = "null" ]; then
   echo -e "${RED}❌ ERROR: No se pudo crear blog de prueba. Verifica que el servidor esté corriendo y POST funcione.${NC}"
   exit 1
 fi
@@ -80,9 +41,8 @@ fi
 echo -e "${BLUE}🚀 TESTING UPDATE BLOG ENDPOINT (PATCH)${NC}"
 echo -e "${BLUE}===== Casos de validación Zod y errores de negocio =====${NC}\n"
 
-# ✅ HAPPY PATH
-
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "title": "Nuevo título válido para el blog",
@@ -92,9 +52,8 @@ body=$(echo "$response" | head -n -1)
 status=$(echo "$response" | tail -n 1)
 show_result "Test 1: Actualización válida de título y contenido" "$body" "$status" "200 OK"
 
-# ❌ VALIDATION ERROR TESTS
-
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "title": "Hi"
@@ -104,14 +63,16 @@ status=$(echo "$response" | tail -n 1)
 show_result "Test 2: Título muy corto (< 5 caracteres)" "$body" "$status" "400 - ValidationError (título muy corto)"
 
 LONG_TITLE=$(printf 'A%.0s' {1..201})
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+  -H "Cookie: accessToken=${ADMIN_TOKEN}" \
   -H "Content-Type: application/json" \
   -d "{\"title\": \"$LONG_TITLE\"}")
 body=$(echo "$response" | head -n -1)
 status=$(echo "$response" | tail -n 1)
 show_result "Test 3: Título muy largo (> 200 caracteres)" "$body" "$status" "400 - ValidationError (título muy largo)"
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "content": "Corto"
@@ -120,7 +81,8 @@ body=$(echo "$response" | head -n -1)
 status=$(echo "$response" | tail -n 1)
 show_result "Test 4: Contenido muy corto (< 20 caracteres)" "$body" "$status" "400 - ValidationError (contenido muy corto)"
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "slug": "Slug-Invalido!"
@@ -129,7 +91,8 @@ body=$(echo "$response" | head -n -1)
 status=$(echo "$response" | tail -n 1)
 show_result "Test 5: Slug inválido (mayúsculas y símbolos)" "$body" "$status" "400 - ValidationError (slug inválido)"
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "publishedAt": "fecha-invalida"
@@ -140,7 +103,8 @@ show_result "Test 6: publishedAt inválido (no fecha)" "$body" "$status" "400 - 
 
 # ❌ MULTIPLE VALIDATION ERRORS
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "title": "X",
@@ -153,7 +117,8 @@ show_result "Test 7: Múltiples errores de validación" "$body" "$status" "400 -
 
 # ❌ ID INVALIDO
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_INVALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_INVALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "title": "Título válido"
@@ -164,7 +129,8 @@ show_result "Test 8: ID inválido (formato)" "$body" "$status" "400 - Validation
 
 # ❌ ID NO EXISTE
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_NO_EXISTE \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_NO_EXISTE \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "title": "Título válido"
@@ -175,7 +141,8 @@ show_result "Test 9: ID válido pero no existe en la base" "$body" "$status" "40
 
 # ❌ DUPLICITY ERROR
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "title": "Guía Completa de TypeScript para Desarrolladores"
@@ -184,7 +151,8 @@ body=$(echo "$response" | head -n -1)
 status=$(echo "$response" | tail -n 1)
 show_result "Test 10: Duplicidad por título" "$body" "$status" "409 - DuplicityError (título duplicado)"
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "title": "Guía COMPLETA de TypeScript PARA desarrolladores"
@@ -206,7 +174,8 @@ show_result "Test 12: Sin autenticación (sin cookie)" "$body" "$status" "401 - 
 
 # ❌ MALFORMED REQUEST
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+    -H "Cookie: accessToken=${ADMIN_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{
       "title": "JSON mal formado",
@@ -217,7 +186,8 @@ body=$(echo "$response" | head -n -1)
 status=$(echo "$response" | tail -n 1)
 show_result "Test 13: JSON malformado" "$body" "$status" "400 - JSON Parse Error"
 
-response=$(curl -s -w "\n%{http_code}" -b "$COOKIE_JAR" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+response=$(curl -s -w "\n%{http_code}" -X PATCH $API_URL/$BLOG_ID_VALIDO \
+  -H "Cookie: accessToken=${ADMIN_TOKEN}" \
   -H "Content-Type: text/plain" \
   -d 'esto-no-es-json')
 body=$(echo "$response" | head -n -1)
