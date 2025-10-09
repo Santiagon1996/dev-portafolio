@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCreateAdmin } from "@hooks/useAdmin";
 import { Input } from "@components/ui/input";
 import { Button } from "@components/ui/button";
+import { AlertErrors } from "@components/molecules/AlertErrors";
 
 export const RegisterForm = () => {
     const router = useRouter();
@@ -15,10 +16,6 @@ export const RegisterForm = () => {
         email: "",
         password: "",
     });
-
-
-
-
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -65,7 +62,7 @@ export const RegisterForm = () => {
             <Button type="submit" disabled={isPending}>
                 {isPending ? "Creando..." : "Registrar"}
             </Button>
-            {error && <p className="text-red-500">Error: {error.message}</p>}
+            <AlertErrors error={error} />
             {isSuccess && <p className="text-green-500">¡Administrador creado!</p>}
         </form>
     );

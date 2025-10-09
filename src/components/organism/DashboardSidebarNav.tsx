@@ -1,4 +1,3 @@
-// components/DashboardSidebar.tsx
 "use client";
 
 import {
@@ -6,7 +5,7 @@ import {
     SidebarContent,
     SidebarHeader,
     SidebarFooter,
-} from "@components/ui/sidebar"; // Asumiendo que has instalado los componentes de 'sidebar'
+} from "@components/ui/sidebar";
 import { SidebarNav } from "@components/molecules/SidebarNav";
 
 export function DashboardSidebarNav() {
@@ -33,8 +32,7 @@ export function DashboardSidebarNav() {
 
             {/* SidebarFooter: Zona inferior (Opcional) */}
             <SidebarFooter className="p-4 border-t border-cyan-900/50 text-xs text-gray-600">
-                {/* Podrías poner aquí un menú de usuario o información de la versión */}
-                Sistema v1.0
+                Sistema v1.0 S.N
             </SidebarFooter>
         </Sidebar>
     );

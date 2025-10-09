@@ -9,14 +9,14 @@ import { DataTableDialog } from "@components/molecules/DataTableDialog";
 import { DataTableDeleteDialog } from "@components/molecules/DataTableDeleteDialog";
 import { DataTablePagination } from "@components/molecules/DataTablePagination";
 import { DataTableFilters } from "@components/molecules/DataTableFilters";
-import { useDataTableState } from "@components/hooks/useDataTableState";
+import { useDataTableState } from "@hooks/useDataTableState";
 import { toast } from "sonner";
 import { FieldConfig } from "@components/molecules/DynamicForm";
-import { blogFields } from "@components/organism/fields/blogFields";
-import { projectFields } from "@components/organism/fields/projectFields";
-import { educationFields } from "@components/organism/fields/educationFields";
-import { experienceFields } from "@components/organism/fields/experienceFields";
-import { skillFields } from "@components/organism/fields/skillFields";
+import { blogFields } from "@components/config/fields/blogFields";
+import { projectFields } from "@components/config/fields/projectFields";
+import { educationFields } from "@components/config/fields/educationFields";
+import { experienceFields } from "@components/config/fields/experienceFields";
+import { skillFields } from "@components/config/fields/skillFields";
 
 // ====================================================================
 // 1. DEFINICIÓN DE TIPOS GENÉRICOS

@@ -3,6 +3,9 @@
 import { useBlogs, useCreateBlog, useUpdateBlog, useDeleteBlog } from "@hooks/useBlogPost";
 import { GenericDataTable } from "@components/organism/DataTable";
 import { DataTableForm } from "@components/molecules/DataTableForm";
+//Importamos componente alert y QueryApiError para manejo consistente de errores 
+import { Alert, AlertTitle, AlertDescription } from "@components/ui/alert";
+import { QueryApiError } from "@shared/errors/QueryApiError";
 
 // Importa el tipo BlogPost para usar sus claves
 import type { BlogPost, UpdateBlogPostData } from "@lib/types/blog.types";
@@ -59,7 +62,9 @@ export default function BlogsPage() {
                     author: blog.author,
                     tags: blog.tags ?? [],
                     isPublished: blog.isPublished ?? false,
-                    publishedAt: blog.publishedAt ?? "",
+                    publishedAt: typeof blog.publishedAt === "string"
+                        ? (blog.publishedAt ? new Date(blog.publishedAt) : undefined)
+                        : blog.publishedAt,
                 };
                 await createBlog(createData);
                 return true;
@@ -95,7 +100,7 @@ export default function BlogsPage() {
         deleteItem: async (id: string | number): Promise<boolean> => {
             try {
                 // useDeleteBlog espera el ID como string
-                await deleteBlog(String(id));
+                await deleteBlog({ id: String(id) });
                 return true;
             } catch (e) {
                 console.error("Error al eliminar blog:", e);
@@ -104,19 +109,48 @@ export default function BlogsPage() {
         },
     };
 
+    let errorMessage: string | null = null;
+    let errorDetails: string | object | undefined = undefined;
+
+    if (error instanceof QueryApiError) {
+        errorMessage = error.apiError.error;
+        errorDetails = error.apiError.details;
+    } else if (error && typeof error === "object" && "message" in error) {
+        errorMessage = (error as { message?: string }).message ?? "Ocurrió un error desconocido.";
+    }
+
     return (
-        <GenericDataTable
-            data={data?.blogs ?? []}
-            title="Gestión de Blogs"
-            columns={blogColumns}
-            actions={crudActions}
-            hookState={{
-                loading: isLoading,
-                error: error ? error.message : null, // <-- Propaga el error de React Query
-                fetchData: refetch, // <-- Recarga los datos usando React Query   
-            }}
-            FormContent={DataTableForm}
-            entityType="blog"
-        />
+        <div>
+            {/* Manejo de error con Alert de shadcn */}
+            {errorMessage && (
+                <Alert variant="destructive" className="mb-4">
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>
+                        {errorMessage}
+                        {errorDetails && (
+                            <pre className="bg-red-100 p-2 mt-2 rounded text-xs overflow-x-auto">
+                                {typeof errorDetails === "string"
+                                    ? errorDetails
+                                    : JSON.stringify(errorDetails, null, 2)}
+                            </pre>
+                        )}
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            <GenericDataTable
+                data={data?.blogs ?? []}
+                title="Gestión de Blogs"
+                columns={blogColumns}
+                actions={crudActions}
+                hookState={{
+                    loading: isLoading,
+                    error: errorMessage,
+                    fetchData: refetch,
+                }}
+                FormContent={DataTableForm}
+                entityType="blog"
+            />
+        </div>
     );
 }

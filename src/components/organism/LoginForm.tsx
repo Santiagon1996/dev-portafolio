@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAdminLogin } from "@hooks/useAdmin";
 import { Input } from "@components/ui/input";
 import { Button } from "@components/ui/button";
+import { AlertErrors } from "@components/molecules/AlertErrors";
 
 export const LoginForm = () => {
     const router = useRouter();
@@ -46,8 +47,8 @@ export const LoginForm = () => {
             <Button type="submit" disabled={isPending}>
                 {isPending ? "Ingresando..." : "Ingresar"}
             </Button>
-            {error && <p className="text-red-500">Error: {error.message}</p>}
-            {isSuccess && <p className="text-green-500">¡Login exitoso!</p>}
+            <AlertErrors error={error} />
+            {isSuccess && <p className="text-green-500">¡Bienvenido!</p>}
         </form>
     );
 };

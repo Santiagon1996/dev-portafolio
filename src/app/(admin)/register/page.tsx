@@ -1,5 +1,6 @@
 import { RegisterForm } from "@components/organism/RegisterForm";
 
+
 export const metadata = {
     title: "Registro de Usuario | Portafolio Dev",
     description: "Regístrate para acceder a funciones exclusivas.",

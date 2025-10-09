@@ -29,7 +29,9 @@
       "@shared": ["shared/index.ts"],
       "@shared/*": ["shared/*"],
       "@store/*": ["store/*"],
-      "@style/*": ["style/*"]
+      "@style/*": ["style/*"],
+      "@utils/*": ["utils/*"],
+      "@providers/*": ["providers/*"]
 
     }
   },

@@ -1,4 +1,4 @@
-import { ApiErrorResponse } from "@lib/types/api";
+import { ApiErrorResponse } from "@lib/types/apiError.types";
 
 /**
  * Error personalizado para el frontend que contiene la respuesta de error del API.
