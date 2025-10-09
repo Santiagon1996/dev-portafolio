@@ -1,4 +1,3 @@
-// src/errors/error.ts
 
 // 1. Tipos seguros para detalles
 export type ErrorDetails = Record<string, unknown> | unknown[];

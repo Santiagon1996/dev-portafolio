@@ -193,7 +193,7 @@ describe('🧪 getAllBlogs - Test Suite Completo', () => {
             expect(mockBlogPost.countDocuments).toHaveBeenCalledWith({});
 
             expect(result).toEqual({
-                blogs: mockBlogs,
+                blogs: mockBlogs.map(({ _id, ...rest }) => ({ ...rest, id: _id })),
                 total: 3,
                 page: 1,
                 totalPages: 1 // Math.ceil(3/10) = 1
@@ -223,7 +223,7 @@ describe('🧪 getAllBlogs - Test Suite Completo', () => {
             expect(mockBlogPost.countDocuments).toHaveBeenCalledWith({ isPublished: true });
 
             expect(result).toEqual({
-                blogs: filteredBlogs,
+                blogs: filteredBlogs.map(({ _id, ...rest }) => ({ ...rest, id: _id })),
                 total: 2,
                 page: 2,
                 totalPages: 1 // Math.ceil(2/2) = 1
@@ -324,7 +324,7 @@ describe('🧪 getAllBlogs - Test Suite Completo', () => {
             // Assert
             expect(mockBlogPost.find).toHaveBeenCalledWith({ isPublished: true });
             expect(mockBlogPost.countDocuments).toHaveBeenCalledWith({ isPublished: true });
-            expect(result.blogs).toEqual(publishedBlogs);
+            expect(result.blogs).toEqual(publishedBlogs.map(({ _id, ...rest }) => ({ ...rest, id: _id })));
             expect(result.total).toBe(2);
         });
 
@@ -663,7 +663,7 @@ describe('🧪 getAllBlogs - Test Suite Completo', () => {
             const result = await getAllBlogs();
 
             // Assert - Verificar que ambas operaciones async se ejecutaron
-            expect(result.blogs).toEqual(mockBlogs);
+            expect(result.blogs).toEqual(mockBlogs.map(({ _id, ...rest }) => ({ ...rest, id: _id })));
             expect(result.total).toBe(3);
 
             // Verificar que ambas queries se ejecutaron correctamente

@@ -1,4 +1,5 @@
 import { BlogPost, IBlogPost } from "@lib/db/models/index";
+import { mapMongoIds } from "@lib/helpers/mapMongoIds";
 import { errors } from "@shared";
 
 const { SystemError, NotFoundError } = errors;
@@ -96,8 +97,10 @@ export const getAllBlogs = async (
             // Primera promesa: BlogPost.find() retorna Promise<IBlogPost[]>
             BlogPost.find(filter)
                 .sort({ createdAt: -1 })
+                .select("-__v") // Excluye el campo __v
                 .skip(skip)
                 .limit(limit)
+                .lean()
                 .exec(),
             // Segunda promesa: countDocuments() retorna Promise<number>
             BlogPost.countDocuments(filter)
@@ -117,7 +120,7 @@ export const getAllBlogs = async (
         // 📚 CONCEPTO TS: Object literal que cumple con la interface BlogsPaginatedResponse
         // TypeScript verifica que este objeto tenga exactamente las propiedades requeridas
         return {
-            blogs,        // IBlogPost[] ✅ Cumple con la interface
+            blogs: mapMongoIds(blogs) as IBlogPost[],        // IBlogPost[] ✅ Cumple con la interface
             total,        // number ✅ Cumple con la interface  
             page,         // number ✅ Cumple con la interface
             totalPages    // number ✅ Cumple con la interface
